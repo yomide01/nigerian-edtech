@@ -16,6 +16,31 @@ export default function LoginPage() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+  const [resetMode, setResetMode] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
+
+  // Check if already logged in
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user && session.user.email_confirmed_at) {
+        router.push("/dashboard");
+      }
+    };
+    checkSession();
+  }, [router]);
+
+  // Check for error from URL (e.g., from protected route redirect)
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const errorMsg = params.get("error");
+      if (errorMsg) {
+        setError(errorMsg);
+      }
+    }
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,7 +48,7 @@ export default function LoginPage() {
     setError("");
 
     try {
-      // First, sign in with Supabase
+      // Sign in with Supabase
       const { data, error: loginError } = await supabase.auth.signInWithPassword({
         email: formData.email,
         password: formData.password,
@@ -37,10 +62,10 @@ export default function LoginPage() {
 
       if (data.user) {
         // Check if email is confirmed
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        const { data: { user } } = await supabase.auth.getUser();
         
         if (user && !user.email_confirmed_at) {
-          setError("Please verify your email before logging in. Check your inbox (and spam folder)!");
+          setError("Please verify your email before logging in. Check your inbox and spam folder!");
           await supabase.auth.signOut(); // Sign them out immediately
           setLoading(false);
           return;
@@ -51,6 +76,52 @@ export default function LoginPage() {
       }
     } catch (err) {
       setError("An unexpected error occurred");
+      setLoading(false);
+    }
+  };
+
+  const handlePasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    setMessage("");
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(formData.email, {
+        redirectTo: "https://nigerian-edtech.vercel.app/update-password",
+      });
+
+      if (error) {
+        setError(error.message);
+      } else {
+        setResetSent(true);
+        setMessage("Password reset email sent! Check your inbox.");
+      }
+    } catch (err) {
+      setError("Failed to send reset email");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendConfirmation = async () => {
+    setLoading(true);
+    setError("");
+    setMessage("");
+
+    try {
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email: formData.email,
+      });
+
+      if (error) {
+        setError(error.message);
+      } else {
+        setMessage("Confirmation email resent! Please check your inbox and spam folder.");
+      }
+    } catch (err) {
+      setError("Failed to resend confirmation email");
     } finally {
       setLoading(false);
     }
@@ -81,63 +152,138 @@ export default function LoginPage() {
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm mb-6">
               {error}
+              {error.includes("verify your email") && (
+                <button
+                  onClick={handleResendConfirmation}
+                  className="block mt-2 text-sm font-medium text-red-800 underline"
+                  disabled={loading}
+                >
+                  Resend confirmation email
+                </button>
+              )}
             </div>
           )}
 
-          <form className="space-y-6" onSubmit={handleLogin}>
-            {/* Email */}
-            <div>
-              <Label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email address
-              </Label>
-              <div className="mt-1">
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  placeholder="you@university.edu.ng"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                />
-              </div>
+          {message && (
+            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg text-sm mb-6">
+              {message}
             </div>
+          )}
 
-            {/* Password */}
-            <div>
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                  Password
-                </Label>
-                <Link href="/forgot-password" className="text-sm font-medium text-green-600 hover:text-green-500">
-                  Forgot password?
-                </Link>
-              </div>
-              <div className="mt-1">
-                <Input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                  placeholder="••••••••"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                />
-              </div>
-            </div>
-
-            <div>
+          {resetSent ? (
+            <div className="text-center">
+              <p className="text-gray-600 mb-4">Check your email for the password reset link.</p>
               <Button
-                type="submit"
-                className="w-full bg-green-600 hover:bg-green-700 text-white py-3 text-base font-semibold"
-                disabled={loading}
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  setResetMode(false);
+                  setResetSent(false);
+                }}
               >
-                {loading ? "Signing in..." : "Sign in"}
+                Back to Login
               </Button>
             </div>
-          </form>
+          ) : resetMode ? (
+            <form className="space-y-6" onSubmit={handlePasswordReset}>
+              <div>
+                <Label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                  Email address
+                </Label>
+                <div className="mt-1">
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    required
+                    placeholder="you@university.edu.ng"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Button
+                  type="submit"
+                  className="w-full bg-green-600 hover:bg-green-700 text-white py-3 text-base font-semibold"
+                  disabled={loading}
+                >
+                  {loading ? "Sending..." : "Send Reset Email"}
+                </Button>
+              </div>
+
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={() => setResetMode(false)}
+                  className="text-sm text-green-600 hover:text-green-500"
+                >
+                  ← Back to Login
+                </button>
+              </div>
+            </form>
+          ) : (
+            <form className="space-y-6" onSubmit={handleLogin}>
+              {/* Email */}
+              <div>
+                <Label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                  Email address
+                </Label>
+                <div className="mt-1">
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    required
+                    placeholder="you@university.edu.ng"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              {/* Password */}
+              <div>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                    Password
+                  </Label>
+                  <button
+                    type="button"
+                    onClick={() => setResetMode(true)}
+                    className="text-sm font-medium text-green-600 hover:text-green-500"
+                  >
+                    Forgot password?
+                  </button>
+                </div>
+                <div className="mt-1">
+                  <Input
+                    id="password"
+                    name="password"
+                    type="password"
+                    autoComplete="current-password"
+                    required
+                    placeholder="••••••••"
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Button
+                  type="submit"
+                  className="w-full bg-green-600 hover:bg-green-700 text-white py-3 text-base font-semibold"
+                  disabled={loading}
+                >
+                  {loading ? "Signing in..." : "Sign in"}
+                </Button>
+              </div>
+            </form>
+          )}
         </div>
       </div>
     </div>
