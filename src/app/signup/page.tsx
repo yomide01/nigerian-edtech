@@ -1,32 +1,14 @@
-"use client";
+export const dynamic = "force-static";
 
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BookOpen } from "lucide-react";
-
-const nigerianUniversities = [
-  "University of Lagos (UNILAG)",
-  "Obafemi Awolowo University (OAU)",
-  "University of Ibadan (UI)",
-  "Lagos State University (LASU)",
-  "University of Nigeria, Nsukka (UNN)",
-  "Ahmadu Bello University (ABU)",
-  "University of Benin (UNIBEN)",
-  "Covenant University",
-  "Federal University of Technology, Akure (FUTA)",
-  "University of Ilorin (UNILORIN)",
-];
 
 export default function SignupPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-white flex flex-col justify-center py-12 px-4">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <Link href="/" className="flex items-center justify-center gap-2 mb-6">
-          <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-blue-600 rounded-xl flex items-center justify-center">
-            <BookOpen className="w-6 h-6 text-white" />
+          <div className="w-10 h-10 bg-green-600 rounded-xl flex items-center justify-center">
+            <span className="text-white font-bold text-lg">E</span>
           </div>
           <span className="font-bold text-2xl text-gray-900">EduNaija</span>
         </Link>
@@ -42,81 +24,77 @@ export default function SignupPage() {
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-6 shadow-xl rounded-2xl border border-gray-100">
-          <form className="space-y-6" action="#" method="POST">
-            {/* Name */}
+        <div className="bg-white py-8 px-6 border border-gray-200 rounded-lg">
+          <form className="space-y-6">
             <div>
-              <Label htmlFor="name" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
                 Full name
-              </Label>
+              </label>
               <div className="mt-1">
-                <Input
+                <input
                   id="name"
                   name="name"
                   type="text"
-                  autoComplete="name"
                   required
                   placeholder="John Doe"
+                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500"
                 />
               </div>
             </div>
 
-            {/* Email */}
             <div>
-              <Label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                 Email address
-              </Label>
+              </label>
               <div className="mt-1">
-                <Input
+                <input
                   id="email"
                   name="email"
                   type="email"
-                  autoComplete="email"
                   required
                   placeholder="you@university.edu.ng"
+                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500"
                 />
               </div>
             </div>
 
-            {/* Password */}
             <div>
-              <Label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                 Password
-              </Label>
+              </label>
               <div className="mt-1">
-                <Input
+                <input
                   id="password"
                   name="password"
                   type="password"
-                  autoComplete="new-password"
                   required
                   placeholder="••••••••"
+                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500"
                 />
               </div>
             </div>
 
-            {/* University Selection */}
             <div>
-              <Label htmlFor="university" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="university" className="block text-sm font-medium text-gray-700">
                 Select your university
-              </Label>
+              </label>
               <div className="mt-1">
-                <Select>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Choose your university" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {nigerianUniversities.map((uni) => (
-                      <SelectItem key={uni} value={uni}>
-                        {uni}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <select
+                  id="university"
+                  name="university"
+                  required
+                  className="block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
+                >
+                  <option value="">Choose your university</option>
+                  <option value="UNILAG">University of Lagos (UNILAG)</option>
+                  <option value="OAU">Obafemi Awolowo University (OAU)</option>
+                  <option value="UI">University of Ibadan (UI)</option>
+                  <option value="LASU">Lagos State University (LASU)</option>
+                  <option value="UNN">University of Nigeria, Nsukka (UNN)</option>
+                </select>
               </div>
             </div>
 
-            {/* Terms */}
             <div className="flex items-center">
               <input
                 id="terms"
@@ -126,24 +104,17 @@ export default function SignupPage() {
                 className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
               />
               <label htmlFor="terms" className="ml-2 block text-sm text-gray-700">
-                I agree to the{" "}
-                <Link href="/terms" className="text-green-600 hover:text-green-500">
-                  Terms of Service
-                </Link>{" "}
-                and{" "}
-                <Link href="/privacy" className="text-green-600 hover:text-green-500">
-                  Privacy Policy
-                </Link>
+                I agree to the Terms of Service and Privacy Policy
               </label>
             </div>
 
             <div>
-              <Button
+              <button
                 type="submit"
-                className="w-full bg-green-600 hover:bg-green-700 text-white py-3 text-base font-semibold"
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
               >
                 Create account
-              </Button>
+              </button>
             </div>
           </form>
         </div>
