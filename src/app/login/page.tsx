@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +23,7 @@ export default function LoginPage() {
     setError("");
 
     try {
+      // First, sign in with Supabase
       const { data, error: loginError } = await supabase.auth.signInWithPassword({
         email: formData.email,
         password: formData.password,
@@ -35,8 +36,17 @@ export default function LoginPage() {
       }
 
       if (data.user) {
-        alert("Login successful! Redirecting to dashboard...");
-        // Force redirect to live Vercel URL, not localhost
+        // Check if email is confirmed
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        
+        if (user && !user.email_confirmed_at) {
+          setError("Please verify your email before logging in. Check your inbox (and spam folder)!");
+          await supabase.auth.signOut(); // Sign them out immediately
+          setLoading(false);
+          return;
+        }
+
+        // Email confirmed, redirect to dashboard
         window.location.href = "https://nigerian-edtech.vercel.app/dashboard";
       }
     } catch (err) {
