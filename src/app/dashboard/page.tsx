@@ -5,8 +5,8 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
+import { LayoutGrid, BookOpen, Brain, TestTube, TrendingUp, LogOut } from "lucide-react";
 
-// Real data types
 interface Course {
   id: string;
   code: string;
@@ -22,13 +22,6 @@ interface Material {
   created_at: string;
 }
 
-interface Insight {
-  course: string;
-  topic: string;
-  probability: number;
-  trend: "high" | "medium" | "low";
-}
-
 export default function DashboardPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -41,7 +34,6 @@ export default function DashboardPage() {
   });
   const [courses, setCourses] = useState<Course[]>([]);
   const [materials, setMaterials] = useState<Material[]>([]);
-  const [insights, setInsights] = useState<Insight[]>([]);
 
   useEffect(() => {
     const checkUser = async () => {
@@ -51,7 +43,6 @@ export default function DashboardPage() {
         return;
       }
 
-      // Get user profile
       const { data: profile } = await supabase
         .from("profiles")
         .select("full_name")
@@ -62,8 +53,7 @@ export default function DashboardPage() {
         setUserName(profile.full_name || "Student");
       }
 
-      // TODO: Fetch real data from Supabase
-      // For now, show empty state
+      // TODO: Fetch real data
       setStats({
         materialsAccessed: 0,
         aiChats: 0,
@@ -72,7 +62,6 @@ export default function DashboardPage() {
       });
       setCourses([]);
       setMaterials([]);
-      setInsights([]);
       setLoading(false);
     };
 
@@ -81,192 +70,194 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-gray-600">Loading...</div>
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-gray-400">Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50/50">
+      {/* Header - Clean, minimal */}
+      <header className="bg-white border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <Link href="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-blue-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">E</span>
+            <Link href="/" className="flex items-center gap-2.5">
+              <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center shadow-sm">
+                <span className="text-white font-semibold text-sm">E</span>
               </div>
-              <span className="font-bold text-xl text-gray-900">EduNaija</span>
+              <span className="font-semibold text-lg text-gray-900 tracking-tight">EduNaija</span>
             </Link>
+            
+            <nav className="hidden md:flex items-center gap-8">
+              <Link href="/dashboard" className="text-sm text-gray-900 font-medium">Dashboard</Link>
+              <Link href="/materials" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">Materials</Link>
+              <Link href="/ai-tutor" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">AI Tutor</Link>
+              <Link href="/mock-test" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">Mock Tests</Link>
+            </nav>
+
             <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-600">Welcome, {userName}!</span>
+              <span className="text-sm text-gray-600">Hi, {userName}</span>
               <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
                 onClick={() => supabase.auth.signOut().then(() => router.push("/login"))}
+                className="text-gray-600 hover:text-gray-900"
               >
-                Log out
+                <LogOut className="w-4 h-4" />
               </Button>
             </div>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-            <div className="text-3xl font-bold text-gray-900">{stats.materialsAccessed}</div>
-            <div className="text-sm text-gray-600">Materials Accessed</div>
-          </div>
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-            <div className="text-3xl font-bold text-green-600">{stats.aiChats}</div>
-            <div className="text-sm text-gray-600">AI Tutor Sessions</div>
-          </div>
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-            <div className="text-3xl font-bold text-blue-600">{stats.mockTests}</div>
-            <div className="text-sm text-gray-600">Mock Tests Taken</div>
-          </div>
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-            <div className="text-3xl font-bold text-purple-600">{stats.studyStreak}</div>
-            <div className="text-sm text-gray-600">Day Study Streak</div>
-          </div>
+      <main className="max-w-7xl mx-auto px-6 lg:px-8 py-12">
+        {/* Welcome Section - Lots of whitespace */}
+        <div className="mb-12">
+          <h1 className="text-3xl font-normal text-gray-900 mb-2">
+            Welcome back, {userName}
+          </h1>
+          <p className="text-gray-500 text-lg">Your academic journey, simplified.</p>
+        </div>
+
+        {/* Stats Grid - Clean, minimal cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
+          {[
+            { label: "Materials", value: stats.materialsAccessed, icon: BookOpen, color: "text-emerald-600", bg: "bg-emerald-50" },
+            { label: "AI Sessions", value: stats.aiChats, icon: Brain, color: "text-blue-600", bg: "bg-blue-50" },
+            { label: "Mock Tests", value: stats.mockTests, icon: TestTube, color: "text-purple-600", bg: "bg-purple-50" },
+            { label: "Day Streak", value: stats.studyStreak, icon: TrendingUp, color: "text-orange-600", bg: "bg-orange-50" },
+          ].map((stat) => (
+            <div key={stat.label} className="bg-white rounded-2xl p-6 hover:shadow-md transition-all duration-300 border border-gray-100">
+              <div className={`w-10 h-10 ${stat.bg} rounded-xl flex items-center justify-center mb-4`}>
+                <stat.icon className={`w-5 h-5 ${stat.color}`} />
+              </div>
+              <div className="text-3xl font-light text-gray-900 mb-1">{stat.value}</div>
+              <div className="text-sm text-gray-500">{stat.label}</div>
+            </div>
+          ))}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* My Courses */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-              <div className="p-6 border-b border-gray-100">
-                <h2 className="text-xl font-semibold text-gray-900">My Courses</h2>
+          {/* Main Content */}
+          <div className="lg:col-span-2 space-y-8">
+            {/* Courses Section */}
+            <section>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-normal text-gray-900">My Courses</h2>
+                <Link href="/materials" className="text-sm text-emerald-600 hover:text-emerald-700 transition-colors">
+                  Browse all →
+                </Link>
               </div>
+
               {courses.length === 0 ? (
-                <div className="p-12 text-center">
-                  <p className="text-gray-500">No courses yet. Complete your profile to get started!</p>
+                <div className="bg-white rounded-2xl p-12 text-center border border-gray-100">
+                  <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <LayoutGrid className="w-8 h-8 text-gray-300" />
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No courses yet</h3>
+                  <p className="text-gray-500 mb-6">Complete your profile to get started with course materials.</p>
                   <Link href="/profile">
-                    <Button className="mt-4 bg-green-600 hover:bg-green-700 text-white">
+                    <Button className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl px-6">
                       Set Up Profile
                     </Button>
                   </Link>
                 </div>
               ) : (
-                <div className="divide-y divide-gray-100">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {courses.map((course) => (
-                    <div key={course.id} className="p-6 hover:bg-gray-50 transition-colors">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h3 className="font-semibold text-gray-900">{course.code}</h3>
-                          <p className="text-sm text-gray-600">{course.title}</p>
+                    <div key={course.id} className="bg-white rounded-2xl p-6 hover:shadow-md transition-all duration-300 border border-gray-100 group cursor-pointer">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="w-12 h-12 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl flex items-center justify-center">
+                          <BookOpen className="w-6 h-6 text-emerald-600" />
                         </div>
-                        <div className="flex items-center gap-4">
-                          <span className="text-sm text-gray-500">{course.materials_count} materials</span>
-                          <Link href={`/courses/${course.id}`}>
-                            <Button size="sm" variant="outline">View</Button>
-                          </Link>
-                        </div>
+                        <span className="text-xs text-gray-400 bg-gray-50 px-3 py-1 rounded-full">
+                          {course.materials_count} materials
+                        </span>
                       </div>
+                      <h3 className="font-medium text-gray-900 mb-1">{course.code}</h3>
+                      <p className="text-sm text-gray-500">{course.title}</p>
                     </div>
                   ))}
                 </div>
               )}
-            </div>
+            </section>
 
             {/* Recent Materials */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-              <div className="p-6 border-b border-gray-100">
-                <h2 className="text-xl font-semibold text-gray-900">Recent Materials</h2>
+            <section>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-normal text-gray-900">Recent Materials</h2>
+                <Link href="/materials/upload" className="text-sm text-emerald-600 hover:text-emerald-700 transition-colors">
+                  Upload new →
+                </Link>
               </div>
+
               {materials.length === 0 ? (
-                <div className="p-12 text-center">
-                  <p className="text-gray-500">No materials uploaded yet.</p>
+                <div className="bg-white rounded-2xl p-12 text-center border border-gray-100">
+                  <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <BookOpen className="w-8 h-8 text-gray-300" />
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No materials yet</h3>
+                  <p className="text-gray-500 mb-6">Upload your first study material to get started.</p>
                   <Link href="/materials/upload">
-                    <Button className="mt-4 bg-green-600 hover:bg-green-700 text-white">
+                    <Button className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl px-6">
                       Upload Material
                     </Button>
                   </Link>
                 </div>
               ) : (
-                <div className="divide-y divide-gray-100">
+                <div className="space-y-3">
                   {materials.map((material) => (
-                    <div key={material.id} className="p-6 hover:bg-gray-50 transition-colors">
-                      <div className="flex items-center justify-between">
+                    <div key={material.id} className="bg-white rounded-2xl p-5 hover:shadow-md transition-all duration-300 border border-gray-100 flex items-center justify-between group">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
+                          <BookOpen className="w-5 h-5 text-blue-600" />
+                        </div>
                         <div>
                           <h3 className="font-medium text-gray-900">{material.title}</h3>
-                          <p className="text-sm text-gray-600">{material.course_code}</p>
+                          <p className="text-sm text-gray-500">{material.course_code} • {new Date(material.created_at).toLocaleDateString()}</p>
                         </div>
-                        <div className="flex items-center gap-4">
-                          <span className="text-sm text-gray-500">↓ {material.downloads}</span>
-                          <Button size="sm" variant="outline">Download</Button>
-                        </div>
+                      </div>
+                      <div className="flex items-center gap-6">
+                        <span className="text-sm text-gray-400">↓ {material.downloads}</span>
+                        <Button size="sm" variant="ghost" className="opacity-0 group-hover:opacity-100 transition-opacity text-emerald-600">
+                          Download
+                        </Button>
                       </div>
                     </div>
                   ))}
                 </div>
               )}
-            </div>
+            </section>
           </div>
 
-          {/* Right Column */}
+          {/* Sidebar - NotebookLM style */}
           <div className="space-y-6">
-            {/* AI Exam Predictions */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-              <div className="p-6 border-b border-gray-100">
-                <h2 className="text-xl font-semibold text-gray-900">Exam Predictions</h2>
-                <p className="text-sm text-gray-600 mt-1">AI-powered insights</p>
-              </div>
-              <div className="p-6">
-                {insights.length === 0 ? (
-                  <p className="text-gray-500 text-sm">Complete courses to get predictions</p>
-                ) : (
-                  <div className="space-y-4">
-                    {insights.map((insight, i) => (
-                      <div key={i} className="p-4 bg-green-50 rounded-lg">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-medium text-gray-900">{insight.course}</span>
-                          <span className={`text-xs px-2 py-1 rounded-full ${
-                            insight.trend === 'high' ? 'bg-red-100 text-red-700' : 
-                            insight.trend === 'medium' ? 'bg-yellow-100 text-yellow-700' : 
-                            'bg-green-100 text-green-700'
-                          }`}>
-                            {insight.trend} probability
-                          </span>
-                        </div>
-                        <p className="text-sm text-gray-700">{insight.topic}</p>
-                        <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
-                          <div 
-                            className="bg-green-600 h-2 rounded-full" 
-                            style={{ width: `${insight.probability}%` }}
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+            {/* Quick Actions */}
+            <div className="bg-white rounded-2xl p-6 border border-gray-100">
+              <h3 className="text-lg font-normal text-gray-900 mb-4">Quick Actions</h3>
+              <div className="space-y-3">
+                {[
+                  { label: "AI Tutor", href: "/ai-tutor", color: "from-emerald-500 to-teal-600" },
+                  { label: "Mock Test", href: "/mock-test", color: "from-blue-500 to-indigo-600" },
+                  { label: "Browse Materials", href: "/materials", color: "from-purple-500 to-pink-600" },
+                ].map((action) => (
+                  <Link key={action.label} href={action.href}>
+                    <div className={`w-full p-4 bg-gradient-to-br ${action.color} rounded-xl text-white hover:shadow-lg transition-all duration-300 group`}>
+                      <div className="font-medium">{action.label}</div>
+                      <div className="text-sm opacity-80 mt-1">Get started →</div>
+                    </div>
+                  </Link>
+                ))}
               </div>
             </div>
 
-            {/* Quick Actions */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
-              <div className="space-y-3">
-                <Link href="/ai-tutor">
-                  <Button className="w-full bg-green-600 hover:bg-green-700 text-white">
-                    Chat with AI Tutor
-                  </Button>
-                </Link>
-                <Link href="/mock-test">
-                  <Button className="w-full" variant="outline">
-                    Take Mock Test
-                  </Button>
-                </Link>
-                <Link href="/materials">
-                  <Button className="w-full" variant="outline">
-                    Browse Materials
-                  </Button>
-                </Link>
-              </div>
+            {/* Study Tip */}
+            <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-6 border border-emerald-100">
+              <h3 className="text-lg font-normal text-gray-900 mb-2">💡 Study Tip</h3>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                Review your notes within 24 hours of class to improve long-term retention by up to 60%.
+              </p>
             </div>
           </div>
         </div>
