@@ -70,9 +70,9 @@ export default function SignupPage() {
           console.error("Profile creation error:", profileError);
         }
 
-        // Redirect to dashboard or show success
+        // Redirect to live site login page
         alert("Signup successful! Please check your email to verify your account.");
-        router.push("/login");
+        window.location.href = "https://nigerian-edtech.vercel.app/login";
       }
     } catch (err) {
       setError("An unexpected error occurred");

@@ -36,7 +36,8 @@ export default function LoginPage() {
 
       if (data.user) {
         alert("Login successful! Redirecting to dashboard...");
-        router.push("/dashboard");
+        // Force redirect to live Vercel URL, not localhost
+        window.location.href = "https://nigerian-edtech.vercel.app/dashboard";
       }
     } catch (err) {
       setError("An unexpected error occurred");
