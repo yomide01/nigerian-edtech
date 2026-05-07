@@ -33,37 +33,41 @@ export default function MaterialsPage() {
   const [file, setFile] = useState<File | null>(null);
 
   useEffect(() => {
-    const checkUserAndLoad = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        router.push("/login");
-        return;
+    const loadMaterials = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("materials")
+          .select(`
+            id,
+            title,
+            course_code,
+            material_type,
+            downloads,
+            created_at,
+            file_url
+          `)
+          .eq("user_id", (await supabase.auth.getUser()).data.user?.id || "")
+          .order("created_at", { ascending: false });
+      
+        if (error) {
+          if (error.code === '42P01') {
+            // Table doesn't exist yet
+            console.log('Table materials not found - please run SQL schema');
+            setMaterials([]);
+          } else {
+            console.error("Error loading materials:", error);
+          }
+        } else {
+          setMaterials(data || []);
+        }
+      } catch (err) {
+        console.error("Unexpected error:", err);
+      } finally {
+        setLoading(false);
       }
-
-      // Load materials from Supabase
-      const { data, error } = await supabase
-        .from("materials")
-        .select(`
-          id,
-          title,
-          course_code,
-          material_type,
-          downloads,
-          created_at,
-          file_url
-        `)
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        console.error("Error loading materials:", error);
-      } else {
-        setMaterials(data || []);
-      }
-      setLoading(false);
     };
 
-    checkUserAndLoad();
+    loadMaterials();
   }, [router]);
 
   const handleUpload = async (e: React.FormEvent) => {

@@ -1,144 +1,89 @@
--- Enable pgvector extension for AI embeddings
-create extension if not exists vector;
+-- Complete EduNaija Schema
+-- Run this in Supabase Dashboard → SQL Editor
 
--- Universities table
-create table if not exists universities (
-  id uuid default gen_random_uuid() primary key,
-  name text not null unique,
-  code text not null unique,
-  created_at timestamp with time zone default now()
+-- Enable extensions
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
+-- 1. Universities table
+CREATE TABLE IF NOT EXISTS public.universities (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  name TEXT NOT NULL UNIQUE,
+  code TEXT NOT NULL UNIQUE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Users profile table (extends Supabase auth)
-create table if not exists profiles (
-  id uuid references auth.users on delete cascade primary key,
-  full_name text,
-  university_id uuid references universities(id),
-  faculty text,
-  department text,
-  level text,
-  created_at timestamp with time zone default now(),
-  updated_at timestamp with time zone default now()
+-- 2. Profiles table (extends auth.users)
+CREATE TABLE IF NOT EXISTS public.profiles (
+  id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
+  full_name TEXT,
+  university_id UUID REFERENCES public.universities(id),
+  faculty TEXT,
+  department TEXT,
+  level TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Courses table
-create table if not exists courses (
-  id uuid default gen_random_uuid() primary key,
-  university_id uuid references universities(id),
-  faculty text,
-  department text,
-  level text,
-  course_code text not null,
-  course_title text,
-  lecturer text,
-  semester text,
-  academic_session text,
-  created_at timestamp with time zone default now()
+-- 3. Courses table
+CREATE TABLE IF NOT EXISTS public.courses (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  university_id UUID REFERENCES public.universities(id),
+  faculty TEXT,
+  department TEXT,
+  level TEXT,
+  course_code TEXT NOT NULL,
+  course_title TEXT,
+  lecturer TEXT,
+  semester TEXT,
+  academic_session TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Materials table (repository)
-create table if not exists materials (
-  id uuid default gen_random_uuid() primary key,
-  user_id uuid references auth.users on delete cascade,
-  course_id uuid references courses(id),
-  title text not null,
-  description text,
-  file_url text not null,
-  file_type text,
-  file_size bigint,
-  material_type text check (material_type in ('lecture_note', 'past_question', 'assignment', 'lab_manual', 'handout', 'project', 'study_guide')),
-  downloads integer default 0,
-  upvotes integer default 0,
-  downvotes integer default 0,
-  verified boolean default false,
-  created_at timestamp with time zone default now()
+-- 4. Materials table (WITH university_id for isolation)
+CREATE TABLE IF NOT EXISTS public.materials (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  course_id UUID REFERENCES public.courses(id),
+  university_id UUID REFERENCES public.universities(id),
+  title TEXT NOT NULL,
+  description TEXT,
+  file_url TEXT NOT NULL,
+  file_type TEXT,
+  file_size BIGINT,
+  material_type TEXT CHECK (material_type IN ('lecture_note', 'past_question', 'assignment', 'lab_manual', 'handout', 'project', 'study_guide')),
+  downloads INTEGER DEFAULT 0,
+  upvotes INTEGER DEFAULT 0,
+  downvotes INTEGER DEFAULT 0,
+  verified BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- AI Chat history
-create table if not exists ai_chats (
-  id uuid default gen_random_uuid() primary key,
-  user_id uuid references auth.users on delete cascade,
-  course_id uuid references courses(id),
-  title text,
-  created_at timestamp with time zone default now()
+-- 5. AI Chats table
+CREATE TABLE IF NOT EXISTS public.ai_chats (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  course_id UUID REFERENCES public.courses(id),
+  title TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- AI Chat messages
-create table if not exists ai_messages (
-  id uuid default gen_random_uuid() primary key,
-  chat_id uuid references ai_chats(id) on delete cascade,
-  role text check (role in ('user', 'assistant')),
-  content text not null,
-  created_at timestamp with time zone default now()
+-- 6. AI Messages table
+CREATE TABLE IF NOT EXISTS public.ai_messages (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  chat_id UUID REFERENCES public.ai_chats(id) ON DELETE CASCADE,
+  role TEXT CHECK (role IN ('user', 'assistant')),
+  content TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Material embeddings for RAG
-create table if not exists material_embeddings (
-  id uuid default gen_random_uuid() primary key,
-  material_id uuid references materials(id) on delete cascade,
-  embedding vector(1536),
-  chunk_text text,
-  chunk_index integer,
-  created_at timestamp with time zone default now()
-);
-
--- Community ratings
-create table if not exists material_ratings (
-  id uuid default gen_random_uuid() primary key,
-  user_id uuid references auth.users on delete cascade,
-  material_id uuid references materials(id) on delete cascade,
-  rating integer check (rating between 1 and 5),
-  review text,
-  created_at timestamp with time zone default now(),
-  unique(user_id, material_id)
-);
-
--- User reputation
-create table if not exists user_reputation (
-  user_id uuid references auth.users on delete cascade primary key,
-  points integer default 0,
-  uploads_count integer default 0,
-  helpful_votes integer default 0,
-  updated_at timestamp with time zone default now()
-);
-
--- Enable Row Level Security
-alter table profiles enable row level security;
-alter table materials enable row level security;
-alter table ai_chats enable row level security;
-alter table ai_messages enable row level security;
-alter table material_ratings enable row level security;
-
--- Policies: Users can only see materials from their university
-create policy "Users can view materials from their university"
-  on materials for select
-  using (
-    course_id in (
-      select c.id from courses c
-      join profiles p on p.university_id = c.university_id
-      where p.id = auth.uid()
-    )
-  );
-
--- Users can upload their own materials
-create policy "Users can insert their own materials"
-  on materials for insert
-  with check (auth.uid() = user_id);
-
--- Users can update their own materials
-create policy "Users can update their own materials"
-  on materials for update
-  using (auth.uid() = user_id);
-
--- Indexes for performance (scaling to 10M users)
-create index if not exists idx_materials_course on materials(course_id);
-create index if not exists idx_materials_university on materials(course_id);
-create index if not exists idx_courses_university on courses(university_id);
-create index if not exists idx_profiles_university on profiles(university_id);
-create index if not exists idx_material_embeddings_material on material_embeddings(material_id);
+-- Indexes for performance
+CREATE INDEX IF NOT EXISTS idx_materials_university ON public.materials(university_id);
+CREATE INDEX IF NOT EXISTS idx_materials_user ON public.materials(user_id);
+CREATE INDEX IF NOT EXISTS idx_profiles_university ON public.profiles(university_id);
 
 -- Insert sample Nigerian universities
-insert into universities (name, code) values
+INSERT INTO public.universities (name, code) VALUES
   ('University of Lagos', 'UNILAG'),
   ('Obafemi Awolowo University', 'OAU'),
   ('University of Ibadan', 'UI'),
@@ -149,4 +94,53 @@ insert into universities (name, code) values
   ('Covenant University', 'CU'),
   ('Federal University of Technology, Akure', 'FUTA'),
   ('University of Ilorin', 'UNILORIN')
-on conflict (code) do nothing;
+ON CONFLICT (code) DO NOTHING;
+
+-- Enable Row Level Security
+ALTER TABLE public.materials ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.ai_chats ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.ai_messages ENABLE ROW LEVEL SECURITY;
+
+-- Policies for materials (school isolation)
+CREATE POLICY IF NOT EXISTS "Users can view university materials" 
+  ON public.materials FOR SELECT 
+  USING (university_id = (SELECT university_id FROM public.profiles WHERE id = auth.uid()));
+
+CREATE POLICY IF NOT EXISTS "Users can insert own materials" 
+  ON public.materials FOR INSERT 
+  WITH CHECK (
+    auth.uid() = user_id AND 
+    university_id = (SELECT university_id FROM public.profiles WHERE id = auth.uid())
+  );
+
+CREATE POLICY IF NOT EXISTS "Users can update own materials" 
+  ON public.materials FOR UPDATE 
+  USING (auth.uid() = user_id);
+
+CREATE POLICY IF NOT EXISTS "Users can delete own materials" 
+  ON public.materials FOR DELETE 
+  USING (auth.uid() = user_id);
+
+-- Policies for profiles
+CREATE POLICY IF NOT EXISTS "Users can view all profiles" 
+  ON public.profiles FOR SELECT 
+  USING (true);
+
+CREATE POLICY IF NOT EXISTS "Users can update own profile" 
+  ON public.profiles FOR UPDATE 
+  USING (auth.uid() = id);
+
+-- Policies for AI chats
+CREATE POLICY IF NOT EXISTS "Users can manage own chats" 
+  ON public.ai_chats FOR ALL 
+  USING (auth.uid() = user_id);
+
+CREATE POLICY IF NOT EXISTS "Users can manage own messages" 
+  ON public.ai_messages FOR ALL 
+  USING (
+    chat_id IN (SELECT id FROM public.ai_chats WHERE user_id = auth.uid())
+  );
+
+-- Done!
+SELECT 'Schema created successfully!' AS result;
