@@ -104,7 +104,7 @@ export default function LoginPage() {
               </div>
             </div>
             <div className="mt-4">
-              <Button variant="outline" className="w-full" asChild>
+              <Button variant="outline" className="w-full">
                 <Link href="/signup">Create free account</Link>
               </Button>
             </div>

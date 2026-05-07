@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BookOpen, ArrowLeft } from "lucide-react";
+import { BookOpen } from "lucide-react";
 
 const nigerianUniversities = [
   "University of Lagos (UNILAG)",
@@ -16,16 +16,6 @@ const nigerianUniversities = [
   "Covenant University",
   "Federal University of Technology, Akure (FUTA)",
   "University of Ilorin (UNILORIN)",
-  "University of Port Harcourt (UNIPORT)",
-  "Federal University of Technology, Owerri (FUTO)",
-  "University of Agriculture, Abeokuta (UNAAB)",
-  "Ladoke Akintola University of Technology (LAUTECH)",
-  "Ekiti State University (EKSU)",
-  "Rivers State University (RSU)",
-  "Bayero University Kano (BUK)",
-  "Nnamdi Azikiwe University (UNIZIK)",
-  "University of Uyo (UNIUYO)",
-  "Federal University, Dutse (FUD)",
 ];
 
 export default function SignupPage() {
@@ -65,7 +55,6 @@ export default function SignupPage() {
                   autoComplete="name"
                   required
                   placeholder="John Doe"
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500"
                 />
               </div>
             </div>
@@ -83,7 +72,6 @@ export default function SignupPage() {
                   autoComplete="email"
                   required
                   placeholder="you@university.edu.ng"
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500"
                 />
               </div>
             </div>
@@ -101,7 +89,6 @@ export default function SignupPage() {
                   autoComplete="new-password"
                   required
                   placeholder="••••••••"
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500"
                 />
               </div>
             </div>
@@ -125,9 +112,6 @@ export default function SignupPage() {
                   </SelectContent>
                 </Select>
               </div>
-              <p className="mt-2 text-xs text-gray-500">
-                Your university determines the materials and community you'll access
-              </p>
             </div>
 
             {/* Terms */}
@@ -160,31 +144,6 @@ export default function SignupPage() {
               </Button>
             </div>
           </form>
-
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">Free plan includes</span>
-              </div>
-            </div>
-            <div className="mt-4 grid grid-cols-2 gap-2 text-xs text-gray-600">
-              <div className="flex items-center gap-1">
-                <span className="text-green-500">✓</span> Upload materials
-              </div>
-              <div className="flex items-center gap-1">
-                <span className="text-green-500">✓</span> AI tutor access
-              </div>
-              <div className="flex items-center gap-1">
-                <span className="text-green-500">✓</span> Community access
-              </div>
-              <div className="flex items-center gap-1">
-                <span className="text-green-500">✓</span> Mock tests
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>

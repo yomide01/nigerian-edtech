@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -50,12 +50,14 @@ export default function RootLayout({
                 </Link>
               </nav>
               <div className="flex items-center gap-3">
-                <Button variant="ghost" size="sm" asChild>
-                  <Link href="/login">Log in</Link>
-                </Button>
-                <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white" asChild>
-                  <Link href="/signup">Sign up free</Link>
-                </Button>
+                <Link href="/login" className="text-sm text-gray-600 hover:text-gray-900 transition-colors px-3 py-2">
+                  Log in
+                </Link>
+                <Link href="/signup">
+                  <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white">
+                    Sign up free
+                  </Button>
+                </Link>
               </div>
             </div>
           </div>

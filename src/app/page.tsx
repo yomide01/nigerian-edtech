@@ -39,13 +39,13 @@ export default function Home() {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-              <Button size="lg" className="bg-green-600 hover:bg-green-700 text-white px-8 py-6 text-lg" asChild>
+              <Button size="lg" className="bg-green-600 hover:bg-green-700 text-white px-8 py-6 text-lg">
                 <Link href="/signup">
                   Get Started Free
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </Link>
               </Button>
-              <Button size="lg" variant="outline" className="px-8 py-6 text-lg border-gray-300" asChild>
+              <Button size="lg" variant="outline" className="px-8 py-6 text-lg border-gray-300">
                 <Link href="#features">See How It Works</Link>
               </Button>
             </div>
@@ -152,7 +152,7 @@ export default function Home() {
           <p className="text-xl text-green-100 mb-10">
             Join EduNaija today and get access to AI-powered academic tools designed for Nigerian students.
           </p>
-          <Button size="lg" className="bg-white text-green-600 hover:bg-gray-100 px-8 py-6 text-lg font-semibold" asChild>
+          <Button size="lg" className="bg-white text-green-600 hover:bg-gray-100 px-8 py-6 text-lg font-semibold">
             <Link href="/signup">
               Create Free Account
               <ArrowRight className="ml-2 w-5 h-5" />
