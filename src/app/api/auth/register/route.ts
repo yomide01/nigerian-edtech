@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { db } from "@/lib/db";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import { v4 as uuidv4 } from "uuid";
+
+const JWT_SECRET = process.env.JWT_SECRET || "edunaija_secret_key_2025";
 
 export async function POST(request: NextRequest) {
   try {
     const { email, password, fullName, universityId } = await request.json();
 
-    // Validate input
     if (!email || !password || !fullName || !universityId) {
       return NextResponse.json(
         { error: "Missing required fields" },
@@ -13,42 +17,33 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Sign up with Supabase Auth
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          full_name: fullName,
-        },
-      },
-    });
-
-    if (authError) {
+    // Check if user already exists
+    const existingUser = db.prepare("SELECT id FROM users WHERE email = ?").get(email);
+    if (existingUser) {
       return NextResponse.json(
-        { error: authError.message },
-        { status: 400 }
+        { error: "User already exists" },
+        { status: 409 }
       );
     }
 
-    // Create profile
-    if (authData.user) {
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .insert({
-          id: authData.user.id,
-          full_name: fullName,
-          university_id: universityId,
-        });
+    // Hash password
+    const passwordHash = await bcrypt.hash(password, 10);
 
-      if (profileError) {
-        console.error("Profile creation error:", profileError);
-      }
-    }
+    // Create user
+    const userId = uuidv4();
+    const insertUser = db.prepare(`
+      INSERT INTO users (id, email, password_hash, full_name, university_id)
+      VALUES (?, ?, ?, ?, ?)
+    `);
+    insertUser.run(userId, email, passwordHash, fullName, universityId);
+
+    // Generate JWT
+    const token = jwt.sign({ userId, email }, JWT_SECRET, { expiresIn: "7d" });
 
     return NextResponse.json({
-      message: "Registration successful. Please check your email to verify your account.",
-      user: authData.user,
+      message: "Registration successful",
+      token,
+      user: { id: userId, email, full_name: fullName, university_id: universityId },
     });
   } catch (error) {
     console.error("Registration error:", error);
